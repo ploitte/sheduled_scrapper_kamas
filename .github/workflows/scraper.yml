@@ -2,7 +2,7 @@ name: Scrape Kamas
 
 on:
   schedule:
-    - cron: '0 8,14,20 * * *'
+    - cron: '30 * * * *'
   workflow_dispatch:
 
 jobs:

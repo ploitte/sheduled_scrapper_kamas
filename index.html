@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>Prix du Kamas</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -44,7 +45,7 @@
 
         async function loadData() {
             try {
-                const res = await fetch('https://raw.githubusercontent.com/TON_USERNAME/schedule_scrapper_kamas/main/prices.json');
+                const res = await fetch('prices.json');
                 const data = await res.json();
 
                 const labels = data.map(e => new Date(e.date).toLocaleString());
