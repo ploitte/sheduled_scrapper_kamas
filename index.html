@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Prix du Kamas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <h1>Historique prix du Kamas</h1>
+    <canvas id="kamasChart" width="800" height="400"></canvas>
+
+    <script>
+        async function loadData() {
+            const res = await fetch('prices.json');
+            const data = await res.json();
+
+            const labels = data.map(e => new Date(e.date).toLocaleString());
+            const paypalPrices = data.map(e => e.paypal);
+            const bitcoinPrices = data.map(e => e.bitcoin);
+
+            const ctx = document.getElementById('kamasChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Paypal', data: paypalPrices, borderColor: 'blue', fill: false },
+                        { label: 'Bitcoin', data: bitcoinPrices, borderColor: 'green', fill: false }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                    },
+                    scales: {
+                        x: { display: true, title: { display: true, text: 'Date' } },
+                        y: { display: true, title: { display: true, text: 'Prix (€/kamas)' } }
+                    }
+                }
+            });
+        }
+
+        loadData();
+    </script>
+</body>
+
+</html>
