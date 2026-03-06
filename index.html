@@ -5,6 +5,23 @@
     <meta charset="UTF-8">
     <title>Prix du Kamas</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        canvas {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 
 <body>
@@ -12,38 +29,71 @@
     <canvas id="kamasChart" width="800" height="400"></canvas>
 
     <script>
+        // Fonction moyenne mobile
+        function movingAverage(data, period = 3) {
+            const ma = [];
+            for (let i = 0; i < data.length; i++) {
+                const slice = data.slice(Math.max(i - period + 1, 0), i + 1);
+                const sum = slice.reduce((a, b) => a + b, 0);
+                ma.push(sum / slice.length);
+            }
+            return ma;
+        }
+
+        let chartInstance;
+
         async function loadData() {
-            const res = await fetch('prices.json');
-            const data = await res.json();
+            try {
+                const res = await fetch('https://raw.githubusercontent.com/TON_USERNAME/schedule_scrapper_kamas/main/prices.json');
+                const data = await res.json();
 
-            const labels = data.map(e => new Date(e.date).toLocaleString());
-            const paypalPrices = data.map(e => e.paypal);
-            const bitcoinPrices = data.map(e => e.bitcoin);
+                const labels = data.map(e => new Date(e.date).toLocaleString());
+                const paypalPrices = data.map(e => e.paypal);
+                const bitcoinPrices = data.map(e => e.bitcoin);
 
-            const ctx = document.getElementById('kamasChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Paypal', data: paypalPrices, borderColor: 'blue', fill: false },
-                        { label: 'Bitcoin', data: bitcoinPrices, borderColor: 'green', fill: false }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                    },
-                    scales: {
-                        x: { display: true, title: { display: true, text: 'Date' } },
-                        y: { display: true, title: { display: true, text: 'Prix (€/kamas)' } }
-                    }
+                const paypalMA = movingAverage(paypalPrices);
+                const bitcoinMA = movingAverage(bitcoinPrices);
+
+                const ctx = document.getElementById('kamasChart').getContext('2d');
+
+                const datasets = [
+                    { label: 'Paypal', data: paypalPrices, borderColor: 'rgba(0,123,255,1)', backgroundColor: 'rgba(0,123,255,0.2)', borderWidth: 3, tension: 0.3, fill: true },
+                    { label: 'Bitcoin', data: bitcoinPrices, borderColor: 'rgba(40,167,69,1)', backgroundColor: 'rgba(40,167,69,0.2)', borderWidth: 3, tension: 0.3, fill: true },
+                    { label: 'Paypal MA', data: paypalMA, borderColor: 'rgba(0,123,255,0.6)', borderDash: [5, 5], fill: false },
+                    { label: 'Bitcoin MA', data: bitcoinMA, borderColor: 'rgba(40,167,69,0.6)', borderDash: [5, 5], fill: false }
+                ];
+
+                if (chartInstance) {
+                    chartInstance.data.labels = labels;
+                    chartInstance.data.datasets = datasets;
+                    chartInstance.update();
+                } else {
+                    chartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels, datasets },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'top', labels: { font: { size: 14 } } },
+                                tooltip: { mode: 'index', intersect: false }
+                            },
+                            scales: {
+                                x: { display: true, title: { display: true, text: 'Date', font: { size: 14 } }, grid: { color: '#eee' } },
+                                y: { display: true, title: { display: true, text: 'Prix (€/kamas)', font: { size: 14 } }, grid: { color: '#eee' } }
+                            }
+                        }
+                    });
                 }
-            });
+
+            } catch (err) {
+                console.error('Erreur en chargeant les données :', err);
+            }
         }
 
         loadData();
+
+        // Rafraîchissement automatique toutes les 60 secondes
+        setInterval(loadData, 60000);
     </script>
 </body>
 
